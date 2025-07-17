@@ -177,15 +177,7 @@ const fetchDatabaseTasks = async (databaseId, priority) => {
         console.log('Token available:', !!NOTION_CONFIG.token);
         
         const data = await makeNotionRequest(`/databases/${databaseId}/query`, {
-            method: 'POST',
-            body: JSON.stringify({
-                sorts: [
-                    {
-                        property: 'last_edited_time',
-                        direction: 'descending'
-                    }
-                ]
-            })
+            method: 'POST'
         });
 
         return data.results.map(page => ({
