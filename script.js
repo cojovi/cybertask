@@ -1,6 +1,6 @@
 // Notion API Configuration
 const NOTION_CONFIG = {
-    token: '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',
+    token: import.meta.env.VITE_NOTION_TOKEN,
     version: '2022-06-28',
     databases: {
         high: '1eba40b6e27d8004895bd2eb2d884d04',
