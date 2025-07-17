@@ -3,9 +3,9 @@ const NOTION_CONFIG = {
     token: import.meta.env.VITE_NOTION_TOKEN,
     version: '2022-06-28',
     databases: {
-        high: '1eba40b6-e27d-8004-895b-d2eb2d884d04',
-        medium: '21ba40b6-e27d-80e4-92d5-e87cc1ee7379',
-        low: '1eda40b6-e27d-8051-9a4a-de43b1b11741'
+        high: '1eba40b6e27d8004895bd2eb2d884d04',
+        medium: '21ba40b6e27d80e492d5e87cc1ee7379',
+        low: '1eda40b6e27d80519a4ade43b1b11741'
     }
 };
 
