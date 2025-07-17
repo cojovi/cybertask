@@ -1,6 +1,6 @@
 // Notion API Configuration
 const NOTION_CONFIG = {
-    token: import.meta.env.VITE_NOTION_TOKEN,
+    token: import.meta.env.VITE_NOTION_TOKEN || '',
     version: '2022-06-28',
     databases: {
         high: '1eba40b6e27d8004895bd2eb2d884d04',
@@ -145,6 +145,11 @@ const getTaskDate = (properties) => {
 // API functions
 const makeNotionRequest = async (endpoint, options = {}) => {
     try {
+        // Check if token is available
+        if (!NOTION_CONFIG.token) {
+            throw new Error('Notion API token not found. Please check your .env file.');
+        }
+
         const response = await fetch(`/notion-api/v1${endpoint}`, {
             headers: {
                 'Authorization': `Bearer ${NOTION_CONFIG.token}`,
@@ -168,6 +173,9 @@ const makeNotionRequest = async (endpoint, options = {}) => {
 
 const fetchDatabaseTasks = async (databaseId, priority) => {
     try {
+        console.log(`Fetching ${priority} priority tasks from database: ${databaseId}`);
+        console.log('Token available:', !!NOTION_CONFIG.token);
+        
         const data = await makeNotionRequest(`/databases/${databaseId}/query`, {
             method: 'POST',
             body: JSON.stringify({
@@ -193,6 +201,8 @@ const fetchDatabaseTasks = async (databaseId, priority) => {
         }));
     } catch (error) {
         console.error(`Error fetching ${priority} priority tasks:`, error);
+        console.error('Token status:', NOTION_CONFIG.token ? 'Present' : 'Missing');
+        console.error('Database ID:', databaseId);
         showNotification(`Failed to fetch ${priority} priority tasks`, 'error');
         return [];
     }
