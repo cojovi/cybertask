@@ -142,79 +142,42 @@ const getTaskDate = (properties) => {
     return null;
 };
 
-// API functions
-const makeNotionRequest = async (endpoint, options = {}) => {
-    try {
-        const response = await fetch(`/notion-api/v1${endpoint}`, {
-            headers: {
-                'Authorization': `Bearer ${NOTION_CONFIG.token}`,
-                'Notion-Version': NOTION_CONFIG.version,
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        });
+// --- REPLACE Notion API logic with FastAPI fetch ---
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Notion API Error:', error);
-        throw error;
-    }
-};
-
-const fetchDatabaseTasks = async (databaseId, priority) => {
-    try {
-        const data = await makeNotionRequest(`/databases/${databaseId}/query`, {
-            method: 'POST',
-            body: JSON.stringify({
-                sorts: [
-                    {
-                        property: 'last_edited_time',
-                        direction: 'descending'
-                    }
-                ]
-            })
-        });
-
-        return data.results.map(page => ({
-            id: page.id,
-            title: getTaskTitle(page.properties),
-            description: getTaskDescription(page.properties),
-            status: getTaskStatus(page.properties),
-            priority: getTaskPriority(page.properties),
-            date: getTaskDate(page.properties),
-            database: priority,
-            url: page.url,
-            properties: page.properties
-        }));
-    } catch (error) {
-        console.error(`Error fetching ${priority} priority tasks:`, error);
-        showNotification(`Failed to fetch ${priority} priority tasks`, 'error');
-        return [];
-    }
+// Map db1, db2, db3 to priorities
+const DB_PRIORITY_MAP = {
+    db1: 'high',
+    db2: 'medium',
+    db3: 'low'
 };
 
 const loadAllTasks = async () => {
     showLoading();
-    
     try {
-        const [highTasks, mediumTasks, lowTasks] = await Promise.all([
-            fetchDatabaseTasks(NOTION_CONFIG.databases.high, 'high'),
-            fetchDatabaseTasks(NOTION_CONFIG.databases.medium, 'medium'),
-            fetchDatabaseTasks(NOTION_CONFIG.databases.low, 'low')
-        ]);
-
-        allTasks = [...highTasks, ...mediumTasks, ...lowTasks];
+        const response = await fetch('/api/notion_entries');
+        if (!response.ok) throw new Error('Failed to fetch Notion data');
+        const data = await response.json();
+        allTasks = [];
+        for (const [dbKey, entries] of Object.entries(data)) {
+            const priority = DB_PRIORITY_MAP[dbKey] || 'low';
+            for (const entry of entries) {
+                allTasks.push({
+                    id: entry.id,
+                    title: entry.title,
+                    description: '', // Optionally parse from entry.properties
+                    status: 'Not started', // Optionally parse from entry.properties
+                    priority: priority.charAt(0).toUpperCase() + priority.slice(1),
+                    date: null, // Optionally parse from entry.properties
+                    database: priority,
+                    url: entry.url || '',
+                    properties: entry.properties
+                });
+            }
+        }
         filteredTasks = [...allTasks];
-        
         updateStatistics();
         renderTasks();
         updateProgressBars();
-        
         showNotification(`Loaded ${allTasks.length} tasks successfully`, 'success');
     } catch (error) {
         console.error('Error loading tasks:', error);
