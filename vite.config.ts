@@ -9,10 +9,7 @@ export default defineConfig({
       '/notion-api': {
         target: 'https://api.notion.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/notion-api/, ''),
-        headers: {
-          'Origin': 'https://api.notion.com'
-        }
+        rewrite: (path) => path.replace(/^\/notion-api/, '')
       }
     }
   },
